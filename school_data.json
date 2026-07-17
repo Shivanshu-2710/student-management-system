@@ -2,25 +2,9 @@
     "students": [
         {
             "name": "Shivanshu",
-            "age": 12,
-            "email": "@.com",
+            "age": 18,
+            "email": "123@gmail.com",
             "roll_no": 1,
-            "grades": {
-                "English": 99.0
-            }
-        },
-        {
-            "name": "Ankir",
-            "age": 13,
-            "email": "@.com",
-            "roll_no": 2,
-            "grades": {}
-        },
-        {
-            "name": "Dhruv",
-            "age": 10,
-            "email": "not@.com",
-            "roll_no": 3,
             "grades": {}
         }
     ],

@@ -146,6 +146,13 @@ section[data-testid="stSidebar"] * { color: #eae6ff !important; }
 }
 .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -8px rgba(219,39,119,0.6); }
 
+/* Danger button (delete) */
+.danger-zone .stButton>button {
+    background: linear-gradient(120deg, #dc2626, #991b1b);
+    box-shadow: 0 8px 22px -8px rgba(220,38,38,0.7);
+}
+.danger-zone .stButton>button:hover { box-shadow: 0 12px 28px -8px rgba(220,38,38,0.6); }
+
 /* Inputs */
 .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {
     background: rgba(255,255,255,0.06) !important;
@@ -206,6 +213,7 @@ with st.sidebar:
             "🔍 Teacher Lookup",
             "📚 All Students",
             "🗂️ All Teachers",
+            "🗑️ Delete Student",
         ],
         label_visibility="collapsed",
     )
@@ -276,7 +284,7 @@ if page == "📊 Dashboard":
                     yaxis=dict(gridcolor="rgba(168,133,255,0.12)"),
                     height=340,
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
             else:
                 st.info("No grades recorded yet.")
         else:
@@ -302,7 +310,7 @@ if page == "📊 Dashboard":
                 showlegend=True,
                 legend=dict(orientation="h", y=-0.1),
             )
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width="stretch")
         else:
             st.info("No teachers registered yet.")
 
@@ -453,7 +461,7 @@ elif page == "🔍 Student Lookup":
                             margin=dict(t=10, l=10, r=10, b=10),
                             coloraxis_showscale=False,
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width="stretch")
             else:
                 st.error("🚫 Student not found.")
 
@@ -496,14 +504,24 @@ elif page == "📚 All Students":
             grades = s["grades"]
             avg = round(sum(grades.values()) / len(grades), 2) if grades else "—"
             grade_str = ", ".join(f"{k}: {v}" for k, v in grades.items()) or "No grades yet"
-            st.markdown(
-                f"""<div class="person-card">
-                    <div class="name">👩‍🎓 {s['name']} <span class="badge">Roll #{s['roll_no']}</span></div>
-                    <div class="meta">Age {s['age']} • {s['email']}</div>
-                    <div class="meta">🎯 Avg: <b>{avg}</b> &nbsp;|&nbsp; {grade_str}</div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
+            card_col, btn_col = st.columns([6, 1])
+            with card_col:
+                st.markdown(
+                    f"""<div class="person-card">
+                        <div class="name">👩‍🎓 {s['name']} <span class="badge">Roll #{s['roll_no']}</span></div>
+                        <div class="meta">Age {s['age']} • {s['email']}</div>
+                        <div class="meta">🎯 Avg: <b>{avg}</b> &nbsp;|&nbsp; {grade_str}</div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+            with btn_col:
+                st.markdown('<div class="danger-zone">', unsafe_allow_html=True)
+                if st.button("🗑️", key=f"quick_del_{s['roll_no']}", help="Delete this student"):
+                    data["students"] = [x for x in data["students"] if x["roll_no"] != s["roll_no"]]
+                    persist()
+                    st.success(f"🗑️ {s['name']} deleted.")
+                    st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────────────────────────────────
 # ALL TEACHERS
@@ -526,3 +544,37 @@ elif page == "🗂️ All Teachers":
                 </div>""",
                 unsafe_allow_html=True,
             )
+
+# ──────────────────────────────────────────────────────────────────────────
+# DELETE STUDENT
+# ──────────────────────────────────────────────────────────────────────────
+elif page == "🗑️ Delete Student":
+    st.markdown("### 🗑️ Delete a Student")
+    if not data["students"]:
+        st.info("No students registered yet.")
+    else:
+        options = {f'{s["name"]} (Roll #{s["roll_no"]})': s["roll_no"] for s in data["students"]}
+        chosen = st.selectbox("Select Student to Delete", list(options.keys()))
+        roll_no = options[chosen]
+        found = next((s for s in data["students"] if s["roll_no"] == roll_no), None)
+
+        if found:
+            grades = found["grades"]
+            avg = round(sum(grades.values()) / len(grades), 2) if grades else "—"
+            st.markdown(
+                f"""<div class="person-card">
+                    <div class="name">👩‍🎓 {found['name']} <span class="badge">Roll #{found['roll_no']}</span></div>
+                    <div class="meta">Age {found['age']} • {found['email']}</div>
+                    <div class="meta">🎯 Avg: <b>{avg}</b></div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+
+            confirm = st.checkbox(f"⚠️ I confirm I want to permanently delete **{found['name']}**")
+            st.markdown('<div class="danger-zone">', unsafe_allow_html=True)
+            if st.button("🗑️ Delete Student", disabled=not confirm):
+                data["students"] = [x for x in data["students"] if x["roll_no"] != roll_no]
+                persist()
+                st.success(f"✅ {found['name']} was deleted successfully.")
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)

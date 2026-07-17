@@ -34,7 +34,8 @@ class Person(ABC):
         else:
             return False
 
-class student(Person):
+#STUDENT CLASS 
+class Student(Person):
     def get_roles(self):
         return "student"
     def show_details(self):
@@ -85,10 +86,18 @@ class student(Person):
                     print("grade added succesfully")
                     return
         print('Student Not Found')
-
-
-
-class teacher(Person):
+    
+    def del_student(self):
+        roll_no=int(input("Enter Your Roll NO : "))
+        for i in data["students"]:
+            if i["roll_no"]==roll_no:
+                data["students"].remove(i)
+                save()
+                print("Student Deleted SuccesFully !!")
+                return
+        print("Student Does Not Exist")
+#TEACHER CLASS 
+class Teacher(Person):
     def get_roles(self):
         return "teacher"
     def show_details(self):
@@ -125,21 +134,26 @@ class teacher(Person):
         save()
         print(f"Teacher {name} registered")
 
-stud=student()
-teach=teacher()
-print('press 1 to register student : ')
-print('press 2 to register teacher : ')
-print('press 3 to add grades : ')
-print('press 4 to show a student detail : ')
-print('press 5 to show a teacher detail : ')
-choice=int(input('please tell your choice : '))
+student_manager=Student()
+teacher_manager=Teacher()
+
+#MAIN
+print('Press 1 to register student : ')
+print('Press 2 to register teacher : ')
+print('Press 3 to add grades : ')
+print('Press 4 to show a student detail : ')
+print('Press 5 to show a teacher detail : ')
+print("Press 6 to delete student details : ")
+choice=int(input('Please tell your choice : '))
 if choice ==1:
-    stud.register()
+    student_manager.register()
 elif choice ==2:
-    teach.register()
+    teacher_manager.register()
 elif choice ==3:
-    stud.add_grades()
+    student_manager.add_grades()
 elif choice ==4:
-    stud.show_details()
+    student_manager.show_details()
 elif choice==5:
-    teach.show_details()
+    teacher_manager.show_details()
+elif choice==6:
+    student_manager.del_student()
